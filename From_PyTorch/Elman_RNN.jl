@@ -1,3 +1,9 @@
+#=
+Translated From:
+Introduction to Recurrent Neural Networks in Pytorch
+https://www.cpuheater.com/deep-learning/introduction-to-recurrent-neural-networks-in-pytorch/
+GitHub: https://github.com/cpuheater/pytorch_examples
+=#
 using Flux
 using Flux.Tracker
 using Plots
@@ -35,17 +41,12 @@ function train()
       total_loss = 0
       context_state = param(zeros(1,hidden_size))
       for j in 1:length(x)
-         input = x[j]
-         target= y[j]
-         pred, context_state = forward(input, context_state, w1, w2)
-#        @show pred
-#        @show target
-        flush(STDOUT)
+        input = x[j]
+        target= y[j]
+        pred, context_state = forward(input, context_state, w1, w2)
         loss = sum((pred .- target).^2)/2
-#@show loss
         total_loss += loss
         back!(loss)
-
         w1.data .-= lr.*w1.grad
         w2.data .-= lr.*w2.grad
 
