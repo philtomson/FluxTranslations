@@ -5,14 +5,10 @@ Introduction to Recurrent Neural Networks in Pytorch
 https://www.cpuheater.com/deep-learning/introduction-to-recurrent-neural-networks-in-pytorch/
 GitHub: https://github.com/cpuheater/pytorch_examples
 =#
-println("START")
 @time using Flux
-println("used Flux")
 @time using Flux.Tracker
-println("used Flux.Tracker")
- #using Plots
+@time using Plots
 @time using CuArrays
-println("used CuArrays")
 
 srand(1)
 
@@ -21,23 +17,19 @@ epochs = 200
 seq_length = 20
 lr = 0.1
 
-println("1")
 data_time_steps = (linspace(2,10, seq_length+1))
 data = (sin.(data_time_steps))
 
-println("2")
 x = gpu(data[1:end-1])
 y = gpu(data[2:end])
-println("3")
 
 w1 = (param(gpu(randn(input_size,  hidden_size))))
 w2 = (param(gpu(randn(hidden_size, output_size))))
-println("4")
 
 function forward(input, context_state, W1, W2)
    #xh = cat(2,input, context_state) 
    #  Due to a Flux bug you have to do:
-   xh = cu(cat(2, Tracker.collect(input), context_state))
+   xh = gpu(cat(2, Tracker.collect(input), context_state))
    context_state = CUDAnative.tanh.(xh*W1)
    out = context_state*W2
    return out, context_state
@@ -79,6 +71,11 @@ function predict(x,w1,w2)
 end
 
 println("train")
-@time train()
+train()
 println("predict")
-@time predictions = predict(x,w1,w2)
+predictions = predict(x,w1,w2)
+println("... plot ... ")
+Plots.backend(:gr)
+scatter(data_time_steps[1:end-1], x, label="actual")
+scatter!(data_time_steps[2:end],predictions, label="predicted")
+
