@@ -13,7 +13,7 @@ srand(1)
 input_size, hidden_size, output_size = 7, 6, 1
 epochs = 200
 seq_length = 20
-lr = 0.1
+lr = 0.05
 
 data_time_steps = linspace(2,10, seq_length+1)
 data = sin.(data_time_steps)
@@ -33,11 +33,9 @@ function forward(input, context_state, W1, W2)
    return out, context_state
 end
 
-#context_state = zeros(hidden_size)
-predictions = []  
-
-function train() 
+function train(lri=lr) 
    for i in 1:epochs
+      lr = lri
       total_loss = 0
       context_state = param(zeros(1,hidden_size))
       for j in 1:length(x)
@@ -50,6 +48,8 @@ function train()
         w1.data .-= lr.*w1.grad
         w2.data .-= lr.*w2.grad
 
+        lr *= 0.95
+        
         w1.grad .= 0.0
         w2.grad .= 0.0 
         context_state = param(context_state.data)
@@ -60,18 +60,24 @@ function train()
    end
 end
 
-train()
-
-context_state = param(zeros(1,hidden_size))
-predictions = []
-
-println("... running forward test ... ")
-for i in 1:length(x)
-  input = x[i]
-  pred, context_state = forward(input, context_state, w1, w2)
-  append!(predictions, pred.data)
+function predict(x,w1,w2)
+   context_state = gpu(zeros(1,hidden_size))
+   predictions = []
+   for i in 1:length(x)
+     input = x[i]
+     pred, context_state = forward(input, context_state, w1, w2)
+     append!(predictions, pred.data)
+   end
+   predictions
 end
+
+println("train")
+train()
+println("predict")
+predictions = predict(x,w1,w2)
 println("... plot ... ")
+Plots.backend(:gr)
 scatter(data_time_steps[1:end-1], x, label="actual")
 scatter!(data_time_steps[2:end],predictions, label="predicted")
+ #png("scatter.png")
 
